@@ -1,5 +1,6 @@
 defmodule HogwartsApiWeb.Schema do
   use Absinthe.Schema
+
   import_types(HogwartsApiWeb.Schema.ContentTypes)
   # directive :connection_complexity do
 
@@ -63,6 +64,29 @@ defmodule HogwartsApiWeb.Schema do
       end)
     end
 
+    field :generate_pdf, non_null(:string) do
+      arg(:url, non_null(:string))
+      arg(:wait_for_attribute, :string)
+      arg(:wait_for_type, :string)
+
+      resolve(fn args, _ ->
+        %{
+          url: args.url,
+          wait_for_attribute: args.wait_for_attribute,
+          wait_for_type: args.wait_for_type
+        }
+        |> HogwartsApi.Workers.PdfGenerationWorker.new()
+        |> Oban.insert()
+        |> case do
+          {:ok, _} ->
+            {:ok, "PDF generation job enqueued"}
+
+          {:error, _} ->
+            {:error, "Failed to enqueue PDF generation job"}
+        end
+      end)
+    end
+
     field :create_student, non_null(:student) do
       arg(:name, non_null(:string))
       arg(:house, non_null(:house))
@@ -101,5 +125,15 @@ defmodule HogwartsApiWeb.Schema do
         {:ok, topic: "echo_topic"}
       end)
     end
+
+    field :export_complete, non_null(:export_result) do
+      config(fn _, _ ->
+        {:ok, topic: "export_complete_topic"}
+      end)
+    end
+  end
+
+  object :export_result do
+    field :url, non_null(:string)
   end
 end
