@@ -38,6 +38,7 @@ defmodule HogwartsApi.MixProject do
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 3.3"},
+      {:libcluster, "~> 3.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.19.0"},
       {:floki, ">= 0.30.0", only: :test},
@@ -52,9 +53,14 @@ defmodule HogwartsApi.MixProject do
       {:absinthe, "~> 1.7"},
       {:absinthe_plug, "~> 1.5"},
       {:absinthe_phoenix, "~> 2.0.0"},
-      {:subscriptions_transport_ws, "~> 1.0.0"},
       {:oban, "~> 2.15"},
-      {:flame, "~> 0.5.2"}
+      {:flame, "~> 0.5.2"},
+      {:chromic_pdf, "~> 1.17"},
+      {:ex_aws, "~> 2.5"},
+      {:sweet_xml, "~> 0.7.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:dotenv, "3.1.0", only: :dev},
+      {:hackney, "~> 1.20"}
     ]
   end
 
