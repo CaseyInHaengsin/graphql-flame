@@ -14,13 +14,15 @@ defmodule HogwartsApiWeb.Endpoint do
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
-  socket "/api/graphql", HogwartsApiWeb.AbsintheSocket,
+  socket "/socket", HogwartsApiWeb.AbsintheSocket,
     websocket: [
-      path: "",
       subprotocols: ["graphql-ws"],
-      connect_info: [:x_headers],
-      timeout: 60 * 60_000
-    ]
+      timeout: 45_000,
+      transport_options: [
+        socket_opts: [:inet6]
+      ]
+    ],
+    longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
   #
