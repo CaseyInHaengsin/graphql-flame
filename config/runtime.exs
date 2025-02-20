@@ -123,3 +123,19 @@ if config_env() == :prod do
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
 end
+
+fly_app_name = System.get_env("FLY_APP_NAME")
+
+if fly_app_name do
+  config :libcluster,
+    topologies: [
+      fly6pn: [
+        strategy: Cluster.Strategy.DNSPoll,
+        config: [
+          polling_interval: 5_000,
+          query: "#{fly_app_name}.internal",
+          node_basename: fly_app_name
+        ]
+      ]
+    ]
+end
