@@ -1,10 +1,9 @@
 defmodule HogwartsApiWeb.AbsintheSocket do
-  # use Phoenix.Socket
-  use SubscriptionsTransportWS.Socket,
-    schema: HogwartsApiWeb.Schema,
-    keep_alive: 20_000
+  use Phoenix.Socket
 
-  # use Absinthe.Phoenix.Socket, schema: HogwartsApiWeb.Schema
+  use Absinthe.Phoenix.Socket,
+    schema: HogwartsApiWeb.Schema,
+    pubsub: HogwartsApi.PubSub
 
   # A Socket handler
   #
@@ -39,7 +38,7 @@ defmodule HogwartsApiWeb.AbsintheSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   @impl true
-  def connect(params, socket) do
+  def connect(_params, socket) do
     {:ok, socket}
   end
 
@@ -54,12 +53,5 @@ defmodule HogwartsApiWeb.AbsintheSocket do
   #
   # Returning `nil` makes this socket anonymous.
   @impl true
-  def gql_connection_init(message, socket) do
-    IO.inspect(message, label: "message, bro")
-    {:ok, socket}
-  end
-
-  # end
-  # @impl true
-  # def id(_socket), do: nil
+  def id(_socket), do: nil
 end
