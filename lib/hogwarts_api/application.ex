@@ -8,6 +8,7 @@ defmodule HogwartsApi.Application do
   @impl true
   def start(_type, _args) do
     flame_parent = FLAME.Parent.get()
+    topologies = Application.get_env(:libcluster, :topologies) || []
 
     children =
       [
@@ -19,6 +20,8 @@ defmodule HogwartsApi.Application do
         {Phoenix.PubSub, name: HogwartsApi.PubSub},
         # Start the Endpoint (http/https)
         !flame_parent && HogwartsApiWeb.Endpoint,
+        !flame_parent &&
+          {Cluster.Supervisor, [topologies, [name: HogwartsApi.ClusterSupervisor]]},
         {FLAME.Pool,
          name: HogwartsApi.Flamethrower,
          min: 1,
@@ -26,7 +29,32 @@ defmodule HogwartsApi.Application do
          max_concurrency: 5,
          idle_shutdown_after: 30_000,
          log: :debug},
-        {Absinthe.Subscription, HogwartsApiWeb.Endpoint},
+        {ChromicPDF,
+         [
+           no_sandbox: true,
+           on_demand: true,
+           session_pool: [
+             timeout: 10_000,
+             checkout_timeout: 60_000,
+             size: 75,
+             max_uses: 10,
+             init_timeout: 20_000
+           ],
+           offline: false,
+           discard_stderr: false,
+           ignore_certificate_errors: true,
+           disable_scripts: false,
+           chrome_args: [
+             "--no-sandbox",
+             "--disable-setuid-sandbox",
+             "--ignore-ssl-errors",
+             "--ignore-certificate-errors",
+             "--ignore-certificate-errors-spki-list",
+             "--disable-gpu",
+             "--log-level=2"
+           ]
+         ]},
+        !flame_parent && {Absinthe.Subscription, HogwartsApiWeb.Endpoint},
         {Oban, Application.fetch_env!(:hogwarts_api, Oban)}
         # Start a worker by calling: HogwartsApi.Worker.start_link(arg)
         # {HogwartsApi.Worker, arg}
