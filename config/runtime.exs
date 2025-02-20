@@ -16,8 +16,33 @@ import Config
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
+
+if config_env() == :dev do
+  Dotenv.load!()
+end
+
 if System.get_env("PHX_SERVER") do
   config :hogwarts_api, HogwartsApiWeb.Endpoint, server: true
+end
+
+if config_env() != :test do
+  config :ex_aws,
+    debug_requests: true,
+    json_codec: Jason,
+    access_key_id:
+      System.get_env("AWS_ACCESS_KEY_ID") ||
+        raise("Missing env variable: AWS_ACCESS_KEY_ID"),
+    secret_access_key:
+      System.get_env("AWS_SECRET_ACCESS_KEY") ||
+        raise("Missing env variable: AWS_SECRET_ACCESS_KEY")
+
+  config :ex_aws, :s3,
+    scheme: "https://",
+    host: "fly.storage.tigris.dev",
+    region: "auto",
+    bucket:
+      System.get_env("BUCKET_NAME") ||
+        raise("Missing env variable: BUCKET_NAME")
 end
 
 if config_env() == :prod do
