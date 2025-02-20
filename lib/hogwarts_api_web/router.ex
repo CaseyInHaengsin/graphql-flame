@@ -3,7 +3,7 @@ defmodule HogwartsApiWeb.Router do
   use HogwartsApiWeb, :router
 
   pipeline :browser do
-    plug :accepts, ["html"]
+    plug :accepts, ["html", "json"]
     plug :fetch_session
     # plug :fetch_live_flash
     # plug :put_root_layout, html: {HogwartsApiWeb.Layouts, :root}
@@ -15,37 +15,42 @@ defmodule HogwartsApiWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/ui" do
+  # GraphiQL IDE route
+  scope "/" do
     pipe_through :browser
+
+    forward "/", Absinthe.Plug.GraphiQL,
+      schema: HogwartsApiWeb.Schema,
+      socket: HogwartsApiWeb.AbsintheSocket,
+      pubsub: HogwartsApi.PubSub
   end
 
-  scope "/" do
+  # API route
+  scope "/api" do
     pipe_through :api
 
     forward "/graphql", Absinthe.Plug,
       schema: HogwartsApiWeb.Schema,
+      socket: HogwartsApiWeb.AbsintheSocket,
       before_send: {__MODULE__, :absinthe_before_send},
-      analyze_complexity: true
+      analyze_complexity: true,
+      pubsub: HogwartsApi.PubSub
   end
 
-  scope "/" do
-    pipe_through :browser
-    get "/", GraphiqlController, :index
+  # Enable LiveDashboard in development
+  if Application.compile_env(:hogwarts_api, :dev_routes) do
+    # If you want to use the LiveDashboard in production, you should put
+    # it behind authentication and allow only admins to access it.
+    # If your application does not have an admins-only section yet,
+    # you can use Plug.BasicAuth to set up some basic authentication
+    # as long as you are also using SSL (which you should anyway).
+    import Phoenix.LiveDashboard.Router
+
+    scope "/dev" do
+      pipe_through :browser
+      live_dashboard "/dashboard", metrics: HogwartsApiWeb.Telemetry
+    end
   end
-
-  # scope "/" do
-  #   # pipe_through :browser
-
-  #   # socket: HogwartsApiWeb.AbsintheSocket,
-  #   # socket_url: "/api/graphql"
-
-  #   # forward "/", Absinthe.Plug.GraphiQL,
-  #   #   schema: HogwartsApiWeb.Schema,
-  #   #   interface: :playground,
-  #   #   default_url: "/graphql",
-  #   #   socket_url: "/api/graphql",
-  #   #   socket: HogwartsApiWeb.AbsintheSocket
-  # end
 
   def absinthe_before_send(conn, %Absinthe.Blueprint{} = blueprint) do
     complexity =
@@ -62,19 +67,4 @@ defmodule HogwartsApiWeb.Router do
   end
 
   def absinthe_before_send(conn, _), do: conn
-
-  # Enable LiveDashboard in development
-  if Application.compile_env(:hogwarts_api, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
-    import Phoenix.LiveDashboard.Router
-
-    scope "/dev" do
-      pipe_through :browser
-      live_dashboard "/dashboard", metrics: HogwartsApiWeb.Telemetry
-    end
-  end
 end
