@@ -24,7 +24,7 @@ config :hogwarts_api, HogwartsApiWeb.Endpoint,
 config :hogwarts_api, Oban,
   repo: HogwartsApi.Repo,
   engine: Oban.Engines.Lite,
-  queues: [default: 10, mailer: 10]
+  queues: [default: 10, mailer: 10, pdf_generation: 10]
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -47,11 +47,6 @@ config :tailwind,
     ),
     cd: Path.expand("../assets", __DIR__)
   ]
-
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
